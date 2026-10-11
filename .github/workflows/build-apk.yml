@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -45,3 +48,16 @@ jobs:
         with:
           name: antigaspi-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Rename APK for release
+        run: cp build/app/outputs/flutter-apk/app-release.apk antigaspi-${{ github.run_number }}.apk
+
+      - name: Publish GitHub Release with APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "build-${{ github.run_number }}" \
+            "antigaspi-${{ github.run_number }}.apk" \
+            --repo "${{ github.repository }}" \
+            --title "Anti-Gaspi build ${{ github.run_number }}" \
+            --notes "APK compilé automatiquement depuis le commit ${{ github.sha }}."
